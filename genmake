@@ -1,0 +1,141 @@
+#!/bin/bash
+
+# Automatic kernel makefile generation
+# Jerry Cooperstein, coop@linuxfoundation.org, 2/2003 - 1/2017
+# License: GPLv2
+
+OBJS=""   # list of kernel modules (.o files)
+K_S=""    # list of kernel modules (.c files)
+U_S=""    # list of userland programs (.c files)
+U_X=""    # list of userland programs (executables) 
+ALL=""    # list of all targets
+
+CFLAGS_U_X="-O2 -Wall -pthread"    # compile flags for user programs
+
+# set the default kernel source to the running one; otherwise take from 
+# first command line argument 
+
+[[ -z $KROOT ]] && KROOT=/lib/modules/$(uname -r)/build
+KMF=$KROOT/Makefile
+
+# abort if the source is not present
+if [[ ! -d $KROOT ]] || [[ ! -f $KMF ]] ; then
+    echo kernel source directory $KROOT does not exist or has no Makefile
+    exit 1
+fi
+
+# additional flags?
+
+if [[ -n $KINCS ]] ; then
+	CFLAGS_U_X="$CFLAGS_U_X -I$KROOT/include"
+	CFLAGS_T_X="$CFLAGS_T_X -I$KROOT/include"
+fi
+
+echo KROOT = $KROOT, Kernel Makefile = $KMF
+
+# construct lists of kernel and user sources and targets
+
+# skip empty directories
+if [[ -z $(find . -maxdepth 1 -name "*.c") ]] ; then 
+    echo No need to make Makefile: no source code
+    exit
+fi
+
+for names in *.c ; do 
+
+# exclude files with NOMAKE or .mod.c files
+
+ if [[ $(grep NOMAKE $names) ]] || [[ $(grep vermagic $names) ]] ; then
+     echo "$names is being skipped, it is not a module or program"
+     else
+     if [[ $(grep \<linux\/module.h\> $names ) ]] ; then
+	 FILENAME_DOTO=$(basename $names .c).o
+	 OBJS=$OBJS" $FILENAME_DOTO"
+	 K_S=$K_S" $names"
+     else
+	 U_X=$U_X" $(basename $names .c)"
+	 U_S=$U_S" $names"
+     fi
+ fi
+done
+
+CLEANSTUFF="$U_X $T_X"
+
+# maybe there are no kernel modules
+
+[[ -n $OBJS ]] && CLEANSTUFF="$CLEANSTUFF"" Module.symvers modules.order"
+
+# get ALL the targets
+
+[[ -n $U_X ]]  && ALL=$ALL" userprogs"
+[[ -n $OBJS ]] && ALL=$ALL" modules"
+
+# echo if you are curious :>
+
+echo K_S=$K_S OBJS=$OBJS U_S=$U_S U_X=$U_X T_S=$T_S T_X=$T_X
+
+#####################################################################################
+# We're done preparing, lets build the makefile finally!
+
+# get rid of the old Makefile, build a new one
+
+rm -f Makefile
+
+echo "### Automatic Makefile generation by 'genmake' script        ####" >>Makefile
+echo "### Copyright, Jerry Cooperstein, coop@linuxfoundation.org 2/2003 - 1/2017 ####" >>Makefile
+echo "### License: GPLv2 ###"                                              >>Makefile
+
+if [[ -n $K_S ]] ; then
+    echo -e "\nobj-m += $OBJS" >> Makefile
+    echo -e "\nexport KROOT=$KROOT" >> Makefile
+    if [[ -n $ARCH ]] ; then 
+	echo -e "\nexport ARCH=$ARCH" >> Makefile
+    fi
+fi
+echo -e "\nallofit: $ALL" >> Makefile
+
+if [[ -n $K_S ]] ; then
+    echo "modules:" >> Makefile
+    echo -e "\t@\$(MAKE) -C \$(KROOT) M=\$(shell pwd) modules" >> Makefile
+    echo "modules_install:" >> Makefile
+    echo -e "\t@\$(MAKE) -C \$(KROOT) M=\$(shell pwd) modules_install" >> Makefile
+    echo "kernel_clean:" >> Makefile
+    echo -e "\t@\$(MAKE) -C \$(KROOT) M=\$(shell pwd) clean" >> Makefile
+fi
+
+if [[ -n $U_X ]] ; then 
+    echo -e "\nuserprogs:" >> Makefile
+    echo -e "\t@\$(MAKE) \\" >> Makefile
+    echo -e "\t\tCFLAGS=\"$CFLAGS_U_X\" \\" >> Makefile
+    if [[ -n $LDLIBS ]] ; then
+	echo -e "\t\tLDLIBS=\"$LDLIBS\" \\" >> Makefile
+    fi
+    if [[ -n $CPPFLAGS ]] ; then
+    echo -e "\t\tCPPFLAGS=\"$CPPFLAGS\" \\" >> Makefile
+    fi
+    echo -e "\t$U_X" >> Makefile 
+fi
+
+if [[ -n $T_X ]] ; then 
+    echo -e "\t@\$(MAKE) \\" >> Makefile
+    echo -e "\t\tCFLAGS=\"$CFLAGS_T_X\" \\" >> Makefile
+    if [[ -n $LDLIBS ]] ; then
+	echo -e "\t\tLDLIBS=\"$LDLIBS\" \\" >> Makefile
+    fi
+    if [[ -n $CPPFLAGS ]] ; then
+	echo -e "\t\tCPPFLAGS=\"$CPPFLAGS\" \\" >> Makefile
+    fi
+    echo -e "\t$T_X" >> Makefile 
+fi
+
+if [[ -n $K_S ]] ; then
+    echo -e "\nclean: kernel_clean" >> Makefile
+else
+    echo -e "\nclean:" >> Makefile
+fi
+echo -e "\trm -rf $CLEANSTUFF" >> Makefile
+
+exit
+
+######################################################################################
+
