@@ -1,18 +1,15 @@
 
-# Assume the source tree is where the running kernel was built
-# You should set KERNELDIR in the environment if it's elsewhere
+# The current directory and kernel root are passed to sub-makes as argument
 KROOT ?= /lib/modules/$(shell uname -r)/build
-#export KROOT=/lib/modules/4.4.0-124-generic/build
-
-# The current directory is passed to sub-makes as argument
 PWD := $(shell pwd)
 
+# CC := gcc-8
 obj-m += rootkit.o
 
 allofit: modules
 
 modules:
-	@$(MAKE) -C $(KROOT) M=$(PWD) modules
+	@$(MAKE) -C $(KROOT) M=$(PWD) CC=$(CC) modules
 
 modules_install:
 	@$(MAKE) -C $(KROOT) M=$(PWD) modules_install
