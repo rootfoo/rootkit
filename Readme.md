@@ -13,7 +13,7 @@ demonstrates the following subversive techniques:
  * Demonstrates writing to read-only pages of memory using CR0 and PTE methods
  * Hijacks the execve system call
  * Hides from procfs and sysfs and lsmod
- 
+
 
 ## Compile / Load
 
@@ -28,10 +28,17 @@ lsmod
 sudo rmmod rootkit.ko
 ```
 
+## Status
 
-## Install at boot (optional) 
+This project was last developed and tested on Ubuntu 18.04 
 
-The following script installs the rootkit to load at boot
+
+## Install pre-compiled kernel module (optional) 
+
+Generally you should always compile kernel modules on the same host they will be installed
+on. However, it is possible to compile it offline and install it on a target system. Note 
+that it must be compiled with the same kernel version and Linux distribution for this to 
+work. The script below outlines the process.
 
 ```
 #!/bin/bash
