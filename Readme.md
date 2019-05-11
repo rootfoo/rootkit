@@ -21,7 +21,7 @@ This is the code associated with the presentation from the *Toorcamp 2018* and *
  * [Thotcon 2019 Slides](https://github.com/rootfoo/pub/blob/master/Developing%20a%20Linux%20Rootkit%20-%20Thotcon%20-%202019-05-03.pdf)
 
 
-## Compile / Load
+## Compiling, Loading
 
 Use `dmesg -w` to see the diagnostic output. After loading, experiment running various
 shell commands to see execve being hijacked in real time.
@@ -36,10 +36,10 @@ sudo rmmod rootkit.ko
 
 ## Status
 
-This project was last developed and tested on Ubuntu 18.04 
+This project was last developed and tested on Ubuntu 18.04 (Linux kernel 4.15.0-48-generic).
 
 
-## Install pre-compiled kernel module (optional) 
+## Installing binary modules
 
 Generally you should always compile kernel modules on the same host they will be installed
 on. However, it is possible to compile it offline and install it on a target system. Note 
