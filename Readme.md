@@ -14,6 +14,12 @@ demonstrates the following subversive techniques:
  * Hijacks the execve system call
  * Hides from procfs and sysfs and lsmod
 
+## Presentation
+
+This is the code associated with the presentation from the *Toorcamp 2018* and *Thotcon 2019*.
+
+ * https://github.com/rootfoo/pub/blob/master/Developing%20a%20Linux%20Rootkit%20-%20Thotcon%20-%202019-05-03.pdf
+
 
 ## Compile / Load
 
